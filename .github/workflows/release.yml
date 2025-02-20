@@ -11,7 +11,8 @@ jobs:
       fail-fast: false
       matrix:
         targets: [
-          { os: windows-2022,  type: android }
+          { os: windows-2022,  type: android },
+          { os: self-hosted, type: android }
         ]
     name: Gyroflow for ${{ matrix.targets.type }}
     runs-on: ${{ matrix.targets.os }}
