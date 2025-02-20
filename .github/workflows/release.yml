@@ -11,8 +11,6 @@ jobs:
       fail-fast: false
       matrix:
         targets: [
-          { os: ubuntu-latest, type: linux },
-          { os: windows-2022,  type: windows },
           { os: windows-2022,  type: android }
         ]
     name: Gyroflow for ${{ matrix.targets.type }}
@@ -41,48 +39,14 @@ jobs:
           vulkan-components: Vulkan-Headers
           vulkan-use-cache: true
 
-      - name: Force qml-video-rs rebuild (UNIX)
-        if: ${{ matrix.targets.os != 'windows-2022' }}
-        run: |
-          rm -rf ${{ github.workspace }}/target/*/deploy/build/qml-video-rs*
-          rm -rf ${{ github.workspace }}/target/deploy/build/qml-video-rs*
       - name: Force qml-video-rs rebuild (Win)
-        if: ${{ matrix.targets.os == 'windows-2022' }}
         run: |
           rm -r -force ${{ github.workspace }}/target/deploy/build/qml-video-rs* -ErrorAction SilentlyContinue
           rm -r -force ${{ github.workspace }}/target/x86_64-pc-windows-msvc/deploy/build/qml-video-rs* -ErrorAction SilentlyContinue
           rm -r -force ${{ github.workspace }}/target/aarch64-pc-windows-msvc/deploy/build/qml-video-rs* -ErrorAction SilentlyContinue
           rm -r -force ${{ github.workspace }}/target/release/build/qml-video-rs* -ErrorAction SilentlyContinue
 
-      - name: Install Mac certificates
-        if: ${{ matrix.targets.os == 'macos-13' }}
-        uses: apple-actions/import-codesign-certs@v3
-        with:
-          p12-file-base64: ${{ secrets.MACOS_CERTIFICATES }}
-          p12-password: ${{ secrets.MACOS_CERTIFICATE_PWD }}
-      - name: Download Provisioning Profiles
-        if: ${{ matrix.targets.type == 'ios' }}
-        id: provisioning
-        uses: apple-actions/download-provisioning-profiles@v3
-        with:
-          bundle-id: 'xyz.gyroflow'
-          profile-type: 'IOS_APP_STORE'
-          issuer-id: ${{ secrets.MACOS_ITCONNECT_ISSUER }}
-          api-key-id: ${{ secrets.MACOS_ITCONNECT_KEY_ID }}
-          api-private-key: ${{ secrets.MACOS_ITCONNECT_KEY }}
-      - name: Download Provisioning Profiles
-        if: ${{ matrix.targets.type == 'macstore' }}
-        id: provisioning_mac
-        uses: apple-actions/download-provisioning-profiles@v3
-        with:
-          bundle-id: 'xyz.gyroflow'
-          profile-type: 'MAC_APP_STORE'
-          issuer-id: ${{ secrets.MACOS_ITCONNECT_ISSUER }}
-          api-key-id: ${{ secrets.MACOS_ITCONNECT_KEY_ID }}
-          api-private-key: ${{ secrets.MACOS_ITCONNECT_KEY }}
-
       - name: Save keystore to file
-        if: ${{ matrix.targets.os == 'windows-2022' }}
         run: |
           echo "${{ secrets.ANDROID_RELEASE_KEYSTORE }}" > ${{ github.workspace }}/android_release.keystore.b64
           echo "${{ secrets.MS_STORE_SIGNING_KEY }}" > ${{ github.workspace }}/_deployment/windows/msix_signing_key.pfx.b64
@@ -174,6 +138,7 @@ jobs:
           path: |
             ${{ github.workspace }}/target/${{ matrix.targets.type == 'windows' && 'x86_64-pc-windows-msvc' || 'aarch64-pc-windows-msvc' }}/deploy/deps/gyroflow.pdb
             ${{ github.workspace }}/target/${{ matrix.targets.type == 'windows' && 'x86_64-pc-windows-msvc' || 'aarch64-pc-windows-msvc' }}/deploy/*.pdb
+      
       - name: Save Binaries
         uses: actions/upload-artifact@v4
         with:
